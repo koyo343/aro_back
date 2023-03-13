@@ -1,16 +1,21 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.engine import Result
+
+from typing import List, Tuple
 
 import api.models.person as person_model
 import api.schemas.person as person_schema
-
-from api.models.person import NameType
 
 
 async def create_person(
     db: AsyncSession, person_create: person_schema.PersonCreate
 ) -> person_model.Person:
     person = person_model.Person(
-        name = NameType.process_bind_param(None, person_create.name, None),
+        first_name = person_create.name.first,
+        last_name = person_create.name.last,
+        age = person_create.age,
+        sex = person_create.sex,
         region_prefecture = person_create.region.prefecture,
         region_city = person_create.region.city,
         favorite_lang_00 = person_create.favorite_language[0],
@@ -23,3 +28,25 @@ async def create_person(
     await db.commit()
     await db.refresh(person)
     return person
+
+async def get_persons(db: AsyncSession) -> List[Tuple[int, str]]:
+    result: Result = await (
+        db.execute(
+            select(
+                person_model.Person.id,
+                person_model.Person.first_name,
+                person_model.Person.last_name,
+                person_model.Person.age,
+                person_model.Person.sex,
+                person_model.Person.region_prefecture,
+                person_model.Person.region_city,
+                person_model.Person.favorite_lang_00,
+                person_model.Person.favorite_lang_01,
+                person_model.Person.favorite_lang_02,
+                person_model.Person.favorite_lang_03,
+                person_model.Person.favorite_lang_04 
+            )
+        )
+    )
+
+    return result.all()

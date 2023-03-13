@@ -13,8 +13,10 @@ class Region(BaseModel):
 
 class PersonBase(BaseModel):
     name: Optional[Name] = Field(None, example=Name(first='太郎', last='飯塚'))
+    age: Optional[int] = Field(None, example=19)
+    sex: Optional[int] = Field(None, example=0)
     region: Optional[Region] = Field(None, example=Region(prefecture='福岡', city='飯塚'))
-    favorite_language: Optional[List[str]] = Field(None, example=['Python'])
+    favorite_language: Optional[List[str]] = Field(None, example=['Python', '', '', '', ''])
 
 class PersonCreate(PersonBase):
     pass
