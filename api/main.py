@@ -4,6 +4,4 @@ from api.routers import person
 
 app = FastAPI()
 
-
-app = FastAPI()
 app.include_router(person.router)

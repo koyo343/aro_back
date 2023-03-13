@@ -4,7 +4,7 @@ from api.db import Base
 
 
 class Person(Base):
-    __tablename__ = "persons"
+    __tablename__ = 'persons'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(62))

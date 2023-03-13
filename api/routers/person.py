@@ -12,26 +12,6 @@ router = APIRouter()
 
 
 
-@router.get('/person/{person_id}', response_model=person_schema.Person)
-async def get_person(person_id: int, db: AsyncSession = Depends(get_db)):
-    person = await person_crud.get_person(db, person_id=person_id)
-
-    if person is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    names = person.name.split(', ')
-    regions = person.region.split(', ')
-    
-    return person_schema.Person(
-        id=person.id,
-        name=person_schema.Name(first=names[0], last=names[1]),
-        age=person.age,
-        sex=person.sex,
-        region=person_schema.Region(prefecture=regions[0], city=regions[1]),
-        github_id=person.github_id,
-        language=person_schema.Language(favorite=person.favorite_langs.split(', '), want_to=person.want_to_langs.split(', '))
-    )
-
 @router.get('/persons', response_model=List[person_schema.Person])
 async def list_persons(db: AsyncSession = Depends(get_db)):
     persons_list: List[person_schema.Person] = []
@@ -50,6 +30,26 @@ async def list_persons(db: AsyncSession = Depends(get_db)):
                                 ))
     
     return persons_list
+
+@router.get('/person/{person_id}', response_model=person_schema.Person)
+async def get_person(person_id: int, db: AsyncSession = Depends(get_db)):
+    person = await person_crud.get_person(db, person_id=person_id)
+
+    if person is None:
+        raise HTTPException(status_code=404, detail='Task not found')
+    
+    names = person.name.split(', ')
+    regions = person.region.split(', ')
+    
+    return person_schema.Person(
+        id=person.id,
+        name=person_schema.Name(first=names[0], last=names[1]),
+        age=person.age,
+        sex=person.sex,
+        region=person_schema.Region(prefecture=regions[0], city=regions[1]),
+        github_id=person.github_id,
+        language=person_schema.Language(favorite=person.favorite_langs.split(', '), want_to=person.la.split(', '))
+    )
 
 @router.post('/persons', response_model=person_schema.PersonCreateResponse)
 async def create_person(
@@ -77,7 +77,7 @@ async def update_person(
 ):
     person = await person_crud.get_person(db, person_id=person_id)
     if person is None:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail='Task not found')
     
     updated_person = await person_crud.update_person(db, person_body, original=person)
 
@@ -94,10 +94,15 @@ async def update_person(
         language=person_schema.Language(favorite=(updated_person.favorite_langs).split(', '), want_to=(updated_person.want_to_langs).split(', '))
     )
 
-@router.delete("/persons/{person_id}", response_model=None)
+@router.delete('/persons/{person_id}', response_model=None)
 async def delete_person(person_id: int, db: AsyncSession = Depends(get_db)):
     person = await person_crud.get_person(db, person_id=person_id)
     if person is None:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail='Task not found')
     
     return await person_crud.delete_person(db, original=person)
+
+@router.get('/matching/{person_id}', response_model=List[person_schema.Person])
+async def matching_persons(person_id: int, db: AsyncSession = Depends(get_db)):
+    pass
+
