@@ -15,7 +15,7 @@ class Language(BaseModel):
     favorite: Optional[List[str]] = Field(None, example=['Python', '', '', '', ''])
     want_to: Optional[List[str]] = Field(None, example=['C++', '', '', '', ''])
 
-class PersonBase(BaseModel):
+class UserBase(BaseModel):
     name: Optional[Name] = Field(None, example=Name(first='太郎', last='飯塚'))
     age: Optional[int] = Field(None, example=19)
     sex: Optional[int] = Field(None, example=0)
@@ -24,16 +24,16 @@ class PersonBase(BaseModel):
     language: Optional[Language] = Field(None, example=Language(favorite=['Python', '', '', '', ''], want_to=['C++', '', '', '', '']))
 
 
-class PersonCreate(PersonBase):
+class UserCreate(UserBase):
     pass
 
-class PersonCreateResponse(PersonCreate):
+class UserCreateResponse(UserCreate):
     id: int
 
     class Config:
         orm_mode = True
 
-class Person(PersonBase):
+class User(UserBase):
     id: int
     
     class Config:

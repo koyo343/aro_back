@@ -3,8 +3,8 @@ from sqlalchemy import Column, Integer, String
 from api.db import Base
 
 
-class Person(Base):
-    __tablename__ = 'persons'
+class User(Base):
+    __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(62))

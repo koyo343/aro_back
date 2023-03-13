@@ -1,16 +1,18 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.schemas.person import Person
+from typing import List
 
-class PersonWithValue:
-    def __init__(self, value: int, person: Person) -> None:
+from api.schemas.user import User
+
+class UserWithValue:
+    def __init__(self, value: int, person: User) -> None:
         self.value: int = value
-        self.person: Person = person
+        self.person: User = person
 
-async def evaluate_degree_of_match(person: Person, other_person: Person) -> int:
-    person.language.want_to
+async def evaluate_degree_of_match(user: User, other_user: User) -> int:
+    user.language.want_to
 
-async def matching_persons(
-        db: AsyncSession, person: Person, num: int
-):
+async def matching_users(
+        db: AsyncSession, user: User, num: int
+) -> List[User]:
     pass
