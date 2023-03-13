@@ -16,16 +16,17 @@ router = APIRouter()
 async def list_persons(db: AsyncSession = Depends(get_db)):
     persons_list: List[person_schema.Person] = []
     for person in await person_crud.get_persons(db):
-        id, first, last, age, sex, prefecture, city, lang_0, lang_1, lang_2, lang_3, lang_4 = person 
+        id, name, age, sex, region, github_id, fav_lang, want_lang = person 
+        names = name.split(', ')
+        regions = region.split(', ')
         persons_list.append(person_schema.Person(
                                     id=id,
-                                    name=person_schema.Name(first=first, last=last),
+                                    name=person_schema.Name(first=names[0], last=names[1]),
                                     age=age,
                                     sex=sex,
-                                    region=person_schema.Region(prefecture=prefecture, city=city),
-                                    favorite_language=[
-                                        lang_0, lang_1, lang_2, lang_3, lang_4
-                                    ]
+                                    region=person_schema.Region(prefecture=regions[0], city=regions[1]),
+                                    github_id=github_id,
+                                    language=person_schema.Language(favorite=fav_lang.split(', '), want_to=want_lang.split(', '))
                                 ))
     
     return persons_list
@@ -36,19 +37,17 @@ async def create_person(
 ):
     person = await person_crud.create_person(db, person_body)
 
+    names = (person.name).split(', ')
+    regions = (person.region).split(', ')
+
     return person_schema.PersonCreateResponse(
         id=person.id,
-        name=person_schema.Name(first=person.first_name, last=person.last_name),
+        name=person_schema.Name(first=names[0], last=names[1]),
         age=person.age,
         sex=person.sex,
-        region=person_schema.Region(prefecture=person.region_prefecture, city=person.region_city),
-        favorite_language=[
-            person.favorite_lang_00,
-            person.favorite_lang_01,
-            person.favorite_lang_02,
-            person.favorite_lang_03,
-            person.favorite_lang_04
-        ]
+        region=person_schema.Region(prefecture=regions[0], city=regions[1]),
+        github_id=person.github_id,
+        language=person_schema.Language(favorite=(person.favorite_langs).split(', '), want_to=(person.want_to_langs).split(', '))
     )
 
 
@@ -62,19 +61,17 @@ async def update_person(
     
     updated_person = await person_crud.update_person(db, person_body, original=person)
 
+    names = (updated_person.name).split(', ')
+    regions = (updated_person.region).split(', ')
+
     return person_schema.PersonCreateResponse(
         id=updated_person.id,
-        name=person_schema.Name(first=updated_person.first_name, last=updated_person.last_name),
+        name=person_schema.Name(first=names[0], last=names[1]),
         age=updated_person.age,
         sex=updated_person.sex,
-        region=person_schema.Region(prefecture=updated_person.region_prefecture, city=updated_person.region_city),
-        favorite_language=[
-            updated_person.favorite_lang_00,
-            updated_person.favorite_lang_01,
-            updated_person.favorite_lang_02,
-            updated_person.favorite_lang_03,
-            updated_person.favorite_lang_04
-        ]
+        region=person_schema.Region(prefecture=regions[0], city=regions[1]),
+        github_id=updated_person.github_id,
+        language=person_schema.Language(favorite=(updated_person.favorite_langs).split(', '), want_to=(updated_person.want_to_langs).split(', '))
     )
 
 @router.delete("/persons/{person_id}", response_model=None)
