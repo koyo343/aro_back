@@ -12,6 +12,26 @@ router = APIRouter()
 
 
 
+@router.get('/person/{person_id}', response_model=person_schema.Person)
+async def get_person(person_id: int, db: AsyncSession = Depends(get_db)):
+    person = await person_crud.get_person(db, person_id=person_id)
+
+    if person is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    names = person.name.split(', ')
+    regions = person.region.split(', ')
+    
+    return person_schema.Person(
+        id=person.id,
+        name=person_schema.Name(first=names[0], last=names[1]),
+        age=person.age,
+        sex=person.sex,
+        region=person_schema.Region(prefecture=regions[0], city=regions[1]),
+        github_id=person.github_id,
+        language=person_schema.Language(favorite=person.favorite_langs.split(', '), want_to=person.want_to_langs.split(', '))
+    )
+
 @router.get('/persons', response_model=List[person_schema.Person])
 async def list_persons(db: AsyncSession = Depends(get_db)):
     persons_list: List[person_schema.Person] = []
