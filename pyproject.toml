@@ -10,6 +10,7 @@ packages = [{include = "demo_app"}]
 python = "^3.9"
 fastapi = "^0.94.0"
 uvicorn = {extras = ["standard"], version = "^0.21.0"}
+oauth2 = "^1.9.0.post1"
 
 
 [build-system]
