@@ -35,6 +35,7 @@ pip-delete-this-directory.txt
 *.log
 
 languages.txt
+requirements_hash.txt
 
 # Temp
 temp*

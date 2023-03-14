@@ -11,5 +11,5 @@ import api.schemas.user as user_schema
 router = APIRouter()
 
 @router.get('/matching/{user_id}', response_model=List[user_schema.User])
-async def matching_users(user_id: int, num: Optional[int] = None, db: AsyncSession = Depends(get_db)):
-    return await matching_crud.matching_users(db, user_id, num)
+async def matching_users(user_id: int, startindex: int = 0, num: Optional[int] = None, db: AsyncSession = Depends(get_db)):
+    return await matching_crud.matching_users(db, user_id, startindex, num)

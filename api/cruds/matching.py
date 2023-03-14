@@ -14,10 +14,9 @@ class UserWithValueList:
 
     def append(self, value: int, user: user_schema.User):
         self.values.append(value)
-        self.values.append(user)
+        self.users_list.append(user)
 
     def sort(self, reverse: bool = False):
-        # valuesとusers_listを同時にソートするため、valuesのインデックスを格納するリストを作成する
         indexes = list(range(len(self.values)))
         indexes.sort(key=lambda i: self.values[i], reverse=True)
         
@@ -39,10 +38,6 @@ class UserWithValueList:
 
 def __evaluate_degree_of_match(myself_user: user_schema.User, other_user: user_schema.User) -> int:
     value: int = 0
-    # print(myself_user.id)
-    # print(myself_user.language)
-    # print(type(myself_user.language))
-    print(type(other_user))
     user_want_langs = list(set(myself_user.language.want_to))
     other_want_langs = list(set(other_user.language.want_to))
     for user_langs in user_want_langs:
@@ -52,7 +47,7 @@ def __evaluate_degree_of_match(myself_user: user_schema.User, other_user: user_s
     return value
 
 async def matching_users(
-        db: AsyncSession, user_id: int, num: Optional[int] = None
+        db: AsyncSession, user_id: int, start_index: int = 0, num: Optional[int] = None
 ) -> List[user_schema.User]:
     user_myself_model = await user_crud.get_user(db=db, user_id=user_id)
     if user_myself_model == None:
@@ -65,12 +60,12 @@ async def matching_users(
     for user in users_list:
         if user.id == user_myself.id:
             continue
-        print(user.language.favorite)
-        print(user_myself.language.favorite)
         users_value_list.append(__evaluate_degree_of_match(user_myself, user), user)
 
     users_value_list.sort()
 
+    if start_index != None:
+        users_value_list.users_list = users_value_list.users_list[start_index:]
     if num != None:
         users_value_list.users_list = users_value_list.users_list[:num]
 
