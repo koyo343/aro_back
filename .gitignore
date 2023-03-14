@@ -35,3 +35,6 @@ pip-delete-this-directory.txt
 *.log
 
 languages.txt
+
+# Temp
+temp*
