@@ -25,7 +25,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    pass
+    password: Optional[str]
 
 class UserCreateResponse(UserCreate):
     id: int
@@ -35,6 +35,10 @@ class UserCreateResponse(UserCreate):
 
 class User(UserBase):
     id: int
+    password: Optional[str]
     
     class Config:
         orm_mode = True
+
+class UserWithPassword(User):
+    password: Optional[str]
