@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 
+from api.routers import user, matching, searching, certification
+
 app = FastAPI()
 
-
-@app.get("/hello")
-async def hello():
-    return {"message": "hello world!"}
+app.include_router(user.router)
+app.include_router(matching.router)
+app.include_router(searching.router)
+app.include_router(certification.router)
