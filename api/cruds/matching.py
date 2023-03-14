@@ -38,11 +38,18 @@ class UserWithValueList:
 
 def __evaluate_degree_of_match(myself_user: user_schema.User, other_user: user_schema.User) -> int:
     value: int = 0
-    user_want_langs = list(set(myself_user.language.want_to))
-    other_want_langs = list(set(other_user.language.want_to))
-    for user_langs in user_want_langs:
-        if user_langs in other_want_langs:
+
+    myself_user_want_langs = list(set(myself_user.language.want_to))
+    other_user_want_langs = list(set(other_user.language.want_to))
+    for user_langs in myself_user_want_langs:
+        if user_langs in other_user_want_langs:
             value += 10
+
+    myself_user_favo_langs = list(set(myself_user.language.favorite))
+    other_user_favo_langs = list(set(other_user.language.favorite))
+    for user_langs in myself_user_favo_langs:
+        if user_langs in other_user_favo_langs:
+            value += 6
 
     return value
 
