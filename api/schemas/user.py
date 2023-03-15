@@ -22,23 +22,25 @@ class UserBase(BaseModel):
     region: Optional[Region] = Field(None, example=Region(prefecture='福岡', city='飯塚'))
     github_id: Optional[str] = Field(None, example='tarou11')
     language: Optional[Language] = Field(None, example=Language(favorite=['Python', '', '', '', ''], want_to=['C++', '', '', '', '']))
+    profile_sentence: Optional[str] = Field(None, example='飯塚太郎です。\nI\'m a Tarou Iizuka.')
 
 
 class UserCreate(UserBase):
     password: Optional[str]
 
-class UserCreateResponse(UserCreate):
+class UserCreateResponse(UserBase):
     id: int
+    disabled: Optional[int]
 
     class Config:
         orm_mode = True
 
 class User(UserBase):
     id: int
-    password: Optional[str]
+    disabled: Optional[int]
     
     class Config:
         orm_mode = True
 
 class UserWithPassword(User):
-    password: Optional[str]
+    hashed_password: Optional[str]

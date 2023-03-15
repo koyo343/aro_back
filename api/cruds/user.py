@@ -6,6 +6,7 @@ from typing import List, Tuple, Optional
 
 import api.models.user as user_model
 import api.schemas.user as user_schema
+import api.cruds.certification as certification_crud
 
 
 async def create_user(
@@ -13,12 +14,15 @@ async def create_user(
 ) -> user_model.User:
     user = user_model.User(
         name = user_create.name.first + ', ' + user_create.name.last,
+        hashed_password = certification_crud.get_password_hash(user_create.password),
         age = user_create.age,
         sex = user_create.sex,
         region = user_create.region.prefecture + ', ' + user_create.region.city,
         github_id = user_create.github_id,
         favorite_langs = ', '.join(user_create.language.favorite),
-        want_to_langs = ', '.join(user_create.language.want_to)
+        want_to_langs = ', '.join(user_create.language.want_to),
+        profile_sentence = user_create.profile_sentence,
+        disabled = 0
     )
     db.add(user)
     await db.commit()
@@ -36,7 +40,9 @@ async def get_users(db: AsyncSession) -> List[Tuple[int, str]]:
                 user_model.User.region,
                 user_model.User.github_id,
                 user_model.User.favorite_langs,
-                user_model.User.want_to_langs
+                user_model.User.want_to_langs,
+                user_model.User.profile_sentence,
+                user_model.User.disabled
             )
         )
     )
@@ -47,7 +53,7 @@ async def list_users(db: AsyncSession) -> List[user_schema.User]:
     users_list: List[user_schema.User] = []
     users = await get_users(db)
     for user in users:
-        id, name, age, sex, region, github_id, fav_lang, want_lang = user 
+        id, name, age, sex, region, github_id, fav_lang, want_lang, sentence, disabled = user 
         names = name.split(', ')
         regions = region.split(', ')
         users_list.append(user_schema.User(
@@ -57,7 +63,9 @@ async def list_users(db: AsyncSession) -> List[user_schema.User]:
                                     sex=sex,
                                     region=user_schema.Region(prefecture=regions[0], city=regions[1]),
                                     github_id=github_id,
-                                    language=user_schema.Language(favorite=fav_lang.split(', '), want_to=want_lang.split(', '))
+                                    language=user_schema.Language(favorite=fav_lang.split(', '), want_to=want_lang.split(', ')),
+                                    profile_sentence=sentence,
+                                    disabled=disabled
                                 ))
     
     return users_list
@@ -65,6 +73,13 @@ async def list_users(db: AsyncSession) -> List[user_schema.User]:
 async def get_user(db: AsyncSession, user_id: int) -> Optional[user_model.User]:
     result: Result = await db.execute(
         select(user_model.User).filter(user_model.User.id == user_id)
+    )
+    user: Optional[Tuple[user_model.User]] = result.first()
+    return user[0] if user is not None else None
+
+async def get_user_in_github_id(db: AsyncSession, github_id: str) -> Optional[user_model.User]:
+    result: Result = await db.execute(
+        select(user_model.User).filter(user_model.User.github_id == github_id)
     )
     user: Optional[Tuple[user_model.User]] = result.first()
     return user[0] if user is not None else None
@@ -80,7 +95,26 @@ def convert_usermodel_to_user(user_model: user_model.User) -> user_schema.User:
         sex=user_model.sex,
         region=user_schema.Region(prefecture=regions[0], city=regions[1]),
         github_id=user_model.github_id,
-        language=user_schema.Language(favorite=user_model.favorite_langs.split(', '), want_to=user_model.want_to_langs.split(', '))
+        language=user_schema.Language(favorite=user_model.favorite_langs.split(', '), want_to=user_model.want_to_langs.split(', ')),
+        profile_sentence=user_model.profile_sentence,
+        disabled=user_model.disabled
+    )
+
+def convert_usermodel_to_user_with_password(user_model: user_model.User) -> user_schema.User:
+    names = user_model.name.split(', ')
+    regions = user_model.region.split(', ')
+    
+    return user_schema.UserWithPassword(
+        id=user_model.id,
+        hashed_password=user_model.hashed_password,
+        name=user_schema.Name(first=names[0], last=names[1]),
+        age=user_model.age,
+        sex=user_model.sex,
+        region=user_schema.Region(prefecture=regions[0], city=regions[1]),
+        github_id=user_model.github_id,
+        language=user_schema.Language(favorite=user_model.favorite_langs.split(', '), want_to=user_model.want_to_langs.split(', ')),
+        profile_sentence=user_model.profile_sentence,
+        disabled=user_model.disabled
     )
 
 def convert_usermodel_to_user_create_response(user_model: user_model.User) -> user_schema.UserCreateResponse:
@@ -94,19 +128,23 @@ def convert_usermodel_to_user_create_response(user_model: user_model.User) -> us
         sex=user_model.sex,
         region=user_schema.Region(prefecture=regions[0], city=regions[1]),
         github_id=user_model.github_id,
-        language=user_schema.Language(favorite=user_model.favorite_langs.split(', '), want_to=user_model.want_to_langs.split(', '))
+        language=user_schema.Language(favorite=user_model.favorite_langs.split(', '), want_to=user_model.want_to_langs.split(', ')),
+        profile_sentence=user_model.profile_sentence,
+        disabled=user_model.disabled
     )
 
 async def update_person(
         db: AsyncSession, user_create: user_schema.UserCreate, original: user_model.User
 ) -> user_model.User:
     original.name = user_create.name.first + ', ' + user_create.name.last
+    original.hashed_password = certification_crud.get_password_hash(user_create.password)
     original.age = user_create.age
     original.sex = user_create.sex
     original.region = user_create.region.prefecture + ', ' + user_create.region.city
     original.github_id = user_create.github_id
     original.favorite_langs = ', '.join(user_create.language.favorite)
     original.want_to_langs = ', '.join(user_create.language.want_to)
+    original.profile_sentence = user_create.profile_sentence
 
     db.add(original)
     await db.commit()

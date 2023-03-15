@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "demo-app"
+name = "dating-app"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "demo_app"}]
+packages = [{include = "dating_app"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
