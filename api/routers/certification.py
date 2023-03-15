@@ -1,10 +1,12 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from typing import Optional
 # from requests_oauthlib import OAuth2Session
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, OAuth2AuthorizationCodeBearer
 from sqlalchemy.ext.asyncio import AsyncSession
+from requests_oauthlib import OAuth2Session
+from starlette.responses import RedirectResponse
 
 import api.cruds.certification as certification_crud
 import api.models.user as user_model
@@ -16,15 +18,50 @@ from api.db import get_db
 router = APIRouter()
 
 
-# CLIENT_ID = 'b811937cf10d9b379129'
-# CLIENT_SECRET = '3b461ccaf29125635461541f506e175a20f15d32'
-
+CLIENT_ID = 'b811937cf10d9b379129'
+CLIENT_SECRET = '3b461ccaf29125635461541f506e175a20f15d32'
+AUTHORIZATION_BASE_URL = 'https://github.com/login/oauth/authorize'
+TOKEN_URL = 'https://github.com/login/oauth/access_token'
+REDIRECT_URL = 'http://localhost:8000/login/github/callback'
 # github = OAuth2Session(CLIENT_ID, redirect_uri='http://localhost:8000/callback/github')
-
+session = OAuth2Session(CLIENT_ID, redirect_uri=REDIRECT_URL)
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oauth2_scheme_end_point = OAuth2AuthorizationCodeBearer(
+    authorizationUrl=AUTHORIZATION_BASE_URL,
+    tokenUrl=TOKEN_URL,
+    scopes={'read': 'Read acceess', 'write': 'Write access'}
+)
+
+# 認証リダイレクト用エンドポイント
+@router.get("/login/github")
+def login(request: Request):
+    # GitHub OAuth認証の開始
+    authorization_url, state = session.authorization_url(AUTHORIZATION_BASE_URL)
+
+    # 認証用URLにリダイレクト
+    return RedirectResponse(authorization_url)
+
+# 認証後のコールバックURL
+@router.get("/login/github/callback")
+async def login_callback(code: str, state: str = None):
+    # アクセストークンを取得するためのリクエストを送信
+    session.fetch_token(
+        token_url=TOKEN_URL,
+        authorization_response=REDIRECT_URL + f"?code={code}",
+        client_secret=CLIENT_SECRET
+    )
+
+    # ユーザー情報を取得
+    user = session.get("https://api.github.com/user").json()
+    return {"user": user}
+
+# 認証済みAPIエンドポイント
+@router.get("/user", response_model=user_schema.User)
+def read_user(user: user_model.User = Depends(certification_crud.get_current_user)):
+    return user_crud.convert_usermodel_to_user(user)
 
 @router.get('/items/')
 async def read_items(token: str = Depends(oauth2_scheme)):
