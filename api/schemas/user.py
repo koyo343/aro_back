@@ -26,9 +26,19 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: Optional[str]
+    password: str = Field('password', example='password')
 
 class UserCreateResponse(UserBase):
+    id: int
+    disabled: Optional[int]
+
+    class Config:
+        orm_mode = True
+
+class UserUpdate(UserBase):
+    pass
+
+class UserUpdateResponse(UserBase):
     id: int
     disabled: Optional[int]
 

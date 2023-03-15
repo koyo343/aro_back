@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Request
 from oauthlib.oauth2 import TokenExpiredError
 from starlette.responses import RedirectResponse
+import os
 
 from api.routers import user, matching, searching, certification
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 app = FastAPI()
 

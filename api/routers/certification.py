@@ -35,38 +35,6 @@ oauth2_scheme_end_point = OAuth2AuthorizationCodeBearer(
     scopes={'read': 'Read acceess', 'write': 'Write access'}
 )
 
-# 認証リダイレクト用エンドポイント
-@router.get("/login/github")
-def login(request: Request):
-    # GitHub OAuth認証の開始
-    authorization_url, state = session.authorization_url(AUTHORIZATION_BASE_URL)
-
-    # 認証用URLにリダイレクト
-    return RedirectResponse(authorization_url)
-
-# 認証後のコールバックURL
-@router.get("/login/github/callback")
-async def login_callback(code: str, state: str = None):
-    # アクセストークンを取得するためのリクエストを送信
-    session.fetch_token(
-        token_url=TOKEN_URL,
-        authorization_response=REDIRECT_URL + f"?code={code}",
-        client_secret=CLIENT_SECRET
-    )
-
-    # ユーザー情報を取得
-    user = session.get("https://api.github.com/user").json()
-    return {"user": user}
-
-# 認証済みAPIエンドポイント
-@router.get("/user", response_model=user_schema.User)
-def read_user(user: user_model.User = Depends(certification_crud.get_current_user)):
-    return user_crud.convert_usermodel_to_user(user)
-
-@router.get('/items/')
-async def read_items(token: str = Depends(oauth2_scheme)):
-    return {'token': token}
-
 # @router.get('/login/github')
 # async def login_github():
 #     pass
@@ -126,3 +94,35 @@ async def read_users_me(current_user: user_model.User = Depends(certification_cr
 @router.get('/users/me/items/')
 async def read_own_items(current_user: user_model.User = Depends(certification_crud.get_current_active_user)):
     return [{'item_id': 'Foo', 'owner': current_user.github_id}]
+
+# 認証リダイレクト用エンドポイント
+@router.get("/login/github")
+async def login(request: Request):
+    # GitHub OAuth認証の開始
+    authorization_url, state = session.authorization_url(AUTHORIZATION_BASE_URL)
+
+    # 認証用URLにリダイレクト
+    return RedirectResponse(authorization_url)
+
+# 認証後のコールバックURL
+@router.get("/login/github/callback")
+async def login_callback(code: str, state: str = None):
+    # アクセストークンを取得するためのリクエストを送信
+    session.fetch_token(
+        token_url=TOKEN_URL,
+        authorization_response=REDIRECT_URL + f"?code={code}",
+        client_secret=CLIENT_SECRET
+    )
+
+    # ユーザー情報を取得
+    user = session.get("https://api.github.com/user").json()
+    return {"user": user}
+
+# 認証済みAPIエンドポイント
+@router.get("/user", response_model=user_schema.User)
+def read_user(user: user_model.User = Depends(certification_crud.get_current_user)):
+    return user_crud.convert_usermodel_to_user(user)
+
+@router.get('/items/')
+async def read_items(token: str = Depends(oauth2_scheme)):
+    return {'token': token}

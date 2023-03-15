@@ -81,7 +81,9 @@ async def get_user_in_github_id(db: AsyncSession, github_id: str) -> Optional[us
     result: Result = await db.execute(
         select(user_model.User).filter(user_model.User.github_id == github_id)
     )
+    print(type(result))
     user: Optional[Tuple[user_model.User]] = result.first()
+    print(type(user))
     return user[0] if user is not None else None
 
 def convert_usermodel_to_user(user_model: user_model.User) -> user_schema.User:
@@ -133,11 +135,26 @@ def convert_usermodel_to_user_create_response(user_model: user_model.User) -> us
         disabled=user_model.disabled
     )
 
+def convert_usermodel_to_user_update_response(user_model: user_model.User) -> user_schema.UserUpdateResponse:
+    names = user_model.name.split(', ')
+    regions = user_model.region.split(', ')
+    
+    return user_schema.UserUpdateResponse(
+        id=user_model.id,
+        name=user_schema.Name(first=names[0], last=names[1]),
+        age=user_model.age,
+        sex=user_model.sex,
+        region=user_schema.Region(prefecture=regions[0], city=regions[1]),
+        github_id=user_model.github_id,
+        language=user_schema.Language(favorite=user_model.favorite_langs.split(', '), want_to=user_model.want_to_langs.split(', ')),
+        profile_sentence=user_model.profile_sentence,
+        disabled=user_model.disabled
+    )
+
 async def update_person(
-        db: AsyncSession, user_create: user_schema.UserCreate, original: user_model.User
+        db: AsyncSession, user_create: user_schema.UserUpdate, original: user_model.User
 ) -> user_model.User:
     original.name = user_create.name.first + ', ' + user_create.name.last
-    original.hashed_password = certification_crud.get_password_hash(user_create.password)
     original.age = user_create.age
     original.sex = user_create.sex
     original.region = user_create.region.prefecture + ', ' + user_create.region.city
